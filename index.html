@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz: Năng lượng Tái tạo & Không tái tạo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 600px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .option-btn {
+            width: 100%;
+            text-align: left;
+            padding: 16px 20px;
+            margin-bottom: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.2s;
+            cursor: pointer;
+            outline: none;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+
+        .option-btn.correct {
+            background-color: #dcfce7;
+            border-color: #22c55e;
+            color: #166534;
+        }
+
+        .option-btn.wrong {
+            background-color: #fee2e2;
+            border-color: #ef4444;
+            color: #991b1b;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background-color: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background-color: #3b82f6;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="card p-8" id="welcome-screen">
+        <div class="text-center">
+            <div class="text-5xl mb-4">🌍</div>
+            <h1 class="text-3xl font-bold text-gray-800 mb-4">Thử thách Năng lượng</h1>
+            <p class="text-gray-600 mb-8">Bạn có hiểu rõ về các nguồn năng lượng trên Trái Đất không? Hãy cùng kiểm tra kiến thức nhé!</p>
+            <button onclick="startQuiz()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full transition duration-300 transform hover:scale-105">
+                Bắt đầu ngay
+            </button>
+        </div>
+    </div>
+
+    <div class="card hidden" id="quiz-screen">
+        <div class="mb-6">
+            <div class="flex justify-between items-center mb-2">
+                <span class="text-sm font-semibold text-blue-600" id="question-counter">Câu hỏi 1/10</span>
+                <span class="text-sm font-semibold text-gray-500" id="score-display">Điểm: 0</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+        </div>
+
+        <h2 class="text-xl font-bold text-gray-800 mb-6" id="question-text">Câu hỏi ở đây?</h2>
+
+        <div id="options-container">
+            <!-- Options added by JS -->
+        </div>
+
+        <div id="feedback" class="mt-4 p-4 rounded-lg hidden text-center font-medium"></div>
+        
+        <div class="mt-6 flex justify-end">
+            <button id="next-btn" onclick="nextQuestion()" class="hidden bg-gray-800 hover:bg-black text-white font-bold py-2 px-6 rounded-lg transition">
+                Tiếp theo
+            </button>
+        </div>
+    </div>
+
+    <div class="card p-8 hidden text-center" id="result-screen">
+        <h2 class="text-3xl font-bold text-gray-800 mb-4">Kết quả cuối cùng</h2>
+        <div class="text-6xl mb-4" id="result-emoji">🎉</div>
+        <p class="text-4xl font-bold text-blue-600 mb-2" id="final-score">0/10</p>
+        <p class="text-gray-600 mb-8" id="result-message">Làm tốt lắm!</p>
+        <button onclick="restartQuiz()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full transition">
+            Chơi lại
+        </button>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                q: "Năng lượng trên Trái Đất chủ yếu bắt nguồn từ đâu?",
+                options: ["Gió", "Mặt Trời", "Sóng biển", "Lòng đất"],
+                correct: 1,
+                fact: "Hầu hết các dạng năng lượng chúng ta sử dụng đều có nguồn gốc gián tiếp hoặc trực tiếp từ Mặt Trời."
+            },
+            {
+                q: "Năng lượng từ thủy triều được hình thành do yếu tố nào?",
+                options: ["Nhiệt độ Trái Đất", "Sức gió", "Lực hấp dẫn", "Dòng chảy sông"],
+                correct: 2,
+                fact: "Năng lượng thủy triều sinh ra từ lực hấp dẫn giữa Trái Đất, Mặt Trăng và Mặt Trời."
+            },
+            {
+                q: "Đặc điểm nào KHÔNG phải của năng lượng tái tạo?",
+                options: ["Có thể tái sinh liên tục", "Thường thân thiện môi trường", "Bị cạn kiệt trong thời gian ngắn", "Nguồn bền vững lâu dài"],
+                correct: 2,
+                fact: "Năng lượng tái tạo KHÔNG bị cạn kiệt trong thời gian ngắn như nhiên liệu hóa thạch."
+            },
+            {
+                q: "Dạng năng lượng nào sau đây là năng lượng tái tạo?",
+                options: ["Than đá", "Dầu mỏ", "Năng lượng địa nhiệt", "Khí tự nhiên"],
+                correct: 2,
+                fact: "Địa nhiệt là nhiệt năng được khai thác từ sâu trong lòng đất."
+            },
+            {
+                q: "Nhược điểm lớn nhất của năng lượng mặt trời và gió là gì?",
+                options: ["Gây ô nhiễm nặng", "Phụ thuộc vào điều kiện tự nhiên", "Hiệu suất cực thấp", "Dễ gây cháy nổ"],
+                correct: 1,
+                fact: "Chúng phụ thuộc vào thời tiết (nắng/gió) nên việc cung cấp điện không phải lúc nào cũng ổn định."
+            },
+            {
+                q: "Nguồn năng lượng nào cần hàng triệu năm để hình thành?",
+                options: ["Năng lượng sinh khối", "Năng lượng nước", "Năng lượng hóa thạch", "Năng lượng gió"],
+                correct: 2,
+                fact: "Than đá, dầu mỏ và khí tự nhiên mất hàng triệu năm phân hủy hữu cơ để hình thành."
+            },
+            {
+                q: "Ưu điểm của năng lượng không tái tạo là gì?",
+                options: ["Không gây ô nhiễm", "Dễ khai thác, sử dụng ổn định", "Vô hạn", "Giảm hiệu ứng nhà kính"],
+                correct: 1,
+                fact: "Các nguồn năng lượng truyền thống có hiệu suất cao và cơ sở hạ tầng sử dụng rất ổn định."
+            },
+            {
+                q: "Loại năng lượng nào sau đây tiềm ẩn rủi ro lớn nhất về sự cố an toàn?",
+                options: ["Năng lượng gió", "Năng lượng mặt trời", "Năng lượng hạt nhân", "Năng lượng sinh khối"],
+                correct: 2,
+                fact: "Mặc dù ít khí thải, nhưng rủi ro rò rỉ phóng xạ từ hạt nhân là cực kỳ nguy hiểm."
+            },
+            {
+                q: "Xu hướng chuyển dịch năng lượng hiện nay của thế giới là gì?",
+                options: ["Chuyển từ năng lượng sạch sang hóa thạch", "Tăng cường dùng than đá", "Chuyển dần sang năng lượng tái tạo", "Ngừng sử dụng điện"],
+                correct: 2,
+                fact: "Thế giới đang chuyển sang năng lượng sạch để bảo vệ môi trường và phát triển bền vững."
+            },
+            {
+                q: "Việc sử dụng năng lượng tái tạo có ý nghĩa gì đối với khí hậu?",
+                options: ["Tăng hiệu ứng nhà kính", "Giảm biến đổi khí hậu", "Làm băng tan nhanh hơn", "Không có tác dụng gì"],
+                correct: 1,
+                fact: "Năng lượng tái tạo phát thải ít CO2, giúp làm chậm quá trình nóng lên toàn cầu."
+            }
+        ];
+
+        let currentQuestion = 0;
+        let score = 0;
+        let answered = false;
+
+        function startQuiz() {
+            document.getElementById('welcome-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.remove('hidden');
+            showQuestion();
+        }
+
+        function showQuestion() {
+            answered = false;
+            const q = questions[currentQuestion];
+            document.getElementById('question-counter').innerText = `Câu hỏi ${currentQuestion + 1}/${questions.length}`;
+            document.getElementById('score-display').innerText = `Điểm: ${score}`;
+            document.getElementById('question-text').innerText = q.q;
+            document.getElementById('progress-fill').style.width = `${((currentQuestion) / questions.length) * 100}%`;
+            
+            const container = document.getElementById('options-container');
+            container.innerHTML = '';
+            document.getElementById('feedback').classList.add('hidden');
+            document.getElementById('next-btn').classList.add('hidden');
+
+            q.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerText = opt;
+                btn.onclick = () => checkAnswer(idx, btn);
+                container.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(idx, btn) {
+            if (answered) return;
+            answered = true;
+            
+            const correctIdx = questions[currentQuestion].correct;
+            const feedback = document.getElementById('feedback');
+            const btns = document.querySelectorAll('.option-btn');
+
+            if (idx === correctIdx) {
+                score += 10;
+                btn.classList.add('correct');
+                feedback.innerText = "Chính xác! ✨ " + questions[currentQuestion].fact;
+                feedback.className = "mt-4 p-4 rounded-lg text-center font-medium bg-green-100 text-green-800";
+            } else {
+                btn.classList.add('wrong');
+                btns[correctIdx].classList.add('correct');
+                feedback.innerText = "Chưa đúng rồi! 💡 " + questions[currentQuestion].fact;
+                feedback.className = "mt-4 p-4 rounded-lg text-center font-medium bg-red-100 text-red-800";
+            }
+
+            feedback.classList.remove('hidden');
+            document.getElementById('next-btn').classList.remove('hidden');
+            document.getElementById('score-display').innerText = `Điểm: ${score}`;
+        }
+
+        function nextQuestion() {
+            currentQuestion++;
+            if (currentQuestion < questions.length) {
+                showQuestion();
+            } else {
+                showResult();
+            }
+        }
+
+        function showResult() {
+            document.getElementById('quiz-screen').classList.add('hidden');
+            const resultScreen = document.getElementById('result-screen');
+            resultScreen.classList.remove('hidden');
+            
+            document.getElementById('final-score').innerText = `${score} / ${questions.length * 10}`;
+            
+            const emoji = document.getElementById('result-emoji');
+            const msg = document.getElementById('result-message');
+            
+            if (score >= 80) {
+                emoji.innerText = "🏆";
+                msg.innerText = "Tuyệt vời! Bạn là một chuyên gia về năng lượng!";
+            } else if (score >= 50) {
+                emoji.innerText = "👏";
+                msg.innerText = "Làm tốt lắm! Bạn đã nắm vững kiến thức cơ bản.";
+            } else {
+                emoji.innerText = "📚";
+                msg.innerText = "Cần ôn tập thêm một chút nhé. Cố gắng lần sau!";
+            }
+        }
+
+        function restartQuiz() {
+            currentQuestion = 0;
+            score = 0;
+            document.getElementById('result-screen').classList.add('hidden');
+            document.getElementById('welcome-screen').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
